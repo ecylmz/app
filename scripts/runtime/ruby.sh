@@ -1,36 +1,35 @@
 #!/usr/bin/env bash
 
-# Provision a base Docker container for Ruby applications
+# Install Ruby development environment
 
-# shellcheck disable=1090
-source <(curl -fsSL https://she.alaturka.io/source) -boot
+set -euo pipefail; [[ -z ${TRACE:-} ]] || set -x
 
-export chrome_install_upstream=true
+export DEBIAN_FRONTEND=noninteractive
 
-is docker || die 'Only for docker'
+ruby_install_versions=${ruby_install_versions:-2.6.3}
+ruby_keep_system_ruby=${ruby_keep_system_ruby:-}
 
-enter github.com/omu/debian/lib/scripts
-	enter ./base
-		try common
-		try locale
-		try timezone
-	leave
+system_ruby_packages=(
+	ruby
+	ruby-dev
+	rake
+)
 
-	enter ./runtime
-		try common
-		try ruby
-		try javascript
-		try chrome
-	leave
+if ! command -v rubian &>/dev/null; then
+	curl -fsSL "https://raw.githubusercontent.com/omu/rubian/master/rubian" >/usr/local/bin/rubian
+	chmod +x /usr/local/bin/rubian
+fi
 
-	enter ./operator
-		try bin
-	leave
+# Remove previously installed bundler gem to minimize problem surface
+if command -v gem &>/dev/null && gem list -i bundler &>/dev/null; then
+	gem uninstall bundler
+fi
 
-	enter ./virtual
-		try clean
-		try prune
-	leave
+# Purge system Ruby
+if [[ -z ${ruby_keep_system_ruby:-} ]] && [[ -x /usr/bin/ruby ]]; then
+	apt-get -y --auto-remove purge "${system_ruby_packages[@]}" ruby-bundler
+	rubian relink
+fi
 
-	etc site vendor=omu medley=ruby description=Ruby color=red version="$(git fetch -q -t --unshallow && git describe)" build="${BUILD:-"$(date +'%y%m%d%H%M%S')"}"
-leave
+# shellcheck disable=2086
+rubian install $ruby_install_versions

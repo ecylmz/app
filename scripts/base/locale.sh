@@ -16,7 +16,7 @@ fi
 # shellcheck disable=1091
 distribution=$(unset ID && . /etc/os-release 2>/dev/null && echo "$ID")
 
-apt-get -y --no-install-recommends install locales
+apt-get update && apt-get -y --no-install-recommends install locales
 
 if [[ $distribution = debian ]]; then
 	debconf-set-selections <<-EOF

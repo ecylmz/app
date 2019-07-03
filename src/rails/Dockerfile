@@ -1,4 +1,4 @@
-FROM debian:9.9
+FROM buildpack-deps:buster
 
 ADD scripts scripts
 
