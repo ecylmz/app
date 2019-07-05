@@ -1,6 +1,8 @@
 Docker Uygulama İmajı Çalışmaları
 =================================
 
+Çalışma https://github.com/omu/app altında devam edecektir.
+
 Production İmajı
 ----------------
 
